@@ -468,5 +468,11 @@
     
     window.addEventListener("load",()=>{ initCanvas(); initMilestoneCanvas(); updateHomeInternet(); updateHomeHighscore(); window.addEventListener("online",()=>{ updateHomeInternet(); hideInternetModal(); if(document.getElementById("gameContainer").style.display==="flex") document.getElementById("statusMsg").innerHTML="🌐 INTERNET RESTORED! CONTINUE."; }); window.addEventListener("offline",()=>{ updateHomeInternet(); if(document.getElementById("gameContainer").style.display==="flex") document.getElementById("statusMsg").innerHTML="⚠️ INTERNET LOST! LEVEL 10/20/30 MAY BE BLOCKED."; }); document.getElementById("startGameBtn").onclick=showRulesModal; document.getElementById("playBtn").onclick=startGameFlow; document.getElementById("skipBtn").onclick=startGameFlow; document.getElementById("soundToggle").onclick=toggleSoundUI; document.getElementById("showLeaderBtn").onclick=showTopLeaderboard; document.getElementById("retryInternetBtn").onclick=()=>{ if(navigator.onLine){ hideInternetModal(); if(document.getElementById("gameContainer").style.display==="flex") loadLevel(currentLevel); else showRulesModal(); } else alert("Still offline. Please connect to internet."); }; });
 </script>
+
+
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script src="script.js"></script>
+
+    
 </body>
 </html>
