@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
 
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script>
+Pi.init({ version: "2.0" });
+</script>
+
+
+
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Animal Odyssey | Memory Master | Highscore with Name</title>
@@ -470,6 +478,27 @@
 </script>
 
 
+
+    <script>
+async function loginWithPi() {
+  try {
+    const scopes = ['username', 'payments'];
+
+    const authResult = await Pi.authenticate(scopes, function(payment) {
+      console.log(payment);
+    });
+
+    console.log("User:", authResult.user);
+    alert("Pi Login Success");
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+window.onload = function () {
+  loginWithPi();
+};
+</script>
 
     
 </body>
