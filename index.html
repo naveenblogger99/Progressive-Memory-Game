@@ -12,18 +12,6 @@
     <title>Animal Odyssey | Memory Master | Highscore with Name</title>
 
 
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-<script>
-window.Pi = window.Pi || {};
-
-document.addEventListener("DOMContentLoaded", function () {
-    Pi.init({
-        version: "2.0",
-        sandbox: true
-    });
-});
-</script>
 
 
 
@@ -420,51 +408,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function getShowTimeSec(level){ return (level>=101)?2:3; }
     function getSequenceLength(level){ if(level>=701) return 6; if(level>=501) return 5; if(level>=201) return 4+Math.min(3,Math.floor((level-200)/100)); return 3; }
     function generateSequence(level, items){ let len=getSequenceLength(level), seq=[]; for(let i=0;i<len;i++){ let idx=(level*131+i*77+101)%items.length; seq.push({itemId:items[idx].id, emoji:items[idx].emoji, name:items[idx].name}); } return seq; }
-// ================= PI NETWORK LOGIN =================
 
-let piUser = null;
-
-async function loginWithPi() {
-    try {
-
-        const scopes = ['username', 'payments'];
-
-        const authResult = await Pi.authenticate(
-            scopes,
-            function(payment) {
-                console.log(payment);
-            }
-        );
-
-        piUser = authResult.user;
-
-        console.log("Pi User:", piUser);
-
-        if(piUser && piUser.username){
-
-            document.getElementById("playerNameInput").value = piUser.username;
-
-            document.getElementById("statusMsg").innerHTML =
-                "🟢 PI LOGIN SUCCESS";
-
-        }
-
-    } catch (error) {
-
-        console.error("Pi Login Failed:", error);
-
-        alert("Pi Login Required To Play");
-
-    }
-}
-
-    
-
-
-
-
-
-    
     let currentLevel=1, secretSeq=[], playerSeq=[], gameActive=false, levelCompleted=false;
     let timerInterval=null, soundOn=true, playerName="", isOnline=true;
     let currentItems=[], currentStyles=[];
