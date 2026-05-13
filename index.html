@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
+<head>
+  <!-- ... other <head> content (meta, title, styles, etc.) ... -->
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+</head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Animal Odyssey | Memory Master | Highscore with Name</title>
@@ -254,8 +257,7 @@
 </head>
 <body>
 
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-<script src="script.js"></script>
+ 
 <canvas id="particleCanvas"></canvas>
 <canvas id="milestoneCanvas"></canvas>
 
@@ -321,6 +323,10 @@
 </div>
 
 <script>
+<script type="module">
+  await Pi.init({ version: "2.0", sandbox: true });
+</script>
+    
     // ========== CELEBRATION SYSTEM ==========
     let milestoneCanvas, milestoneCtx, milestoneParticles = [], milestoneAnim = null;
     function initMilestoneCanvas() { milestoneCanvas = document.getElementById("milestoneCanvas"); milestoneCtx = milestoneCanvas.getContext("2d"); resizeMilestone(); window.addEventListener("resize", resizeMilestone); }
