@@ -11,7 +11,33 @@
 
     <script type="module">
   await Pi.init({ version: "2.0", sandbox: true });
+</script
+
+
+<button onclick="login()">Login with Pi</button>
+
+<script>
+async function login() {
+  const scopes = ['username', 'payments'];
+
+  function onIncompletePaymentFound(payment) {
+    console.log(payment);
+  }
+
+  const auth = await Pi.authenticate(
+    scopes,
+    onIncompletePaymentFound
+  );
+
+  console.log(auth.user.username);
+}
 </script>
+
+
+
+
+
+  
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
