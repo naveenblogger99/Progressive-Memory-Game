@@ -1,14 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<script src="https://sdk.minepi.com/pi-sdk.js"></script
+  <title>Pi Login</title>
 
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding-top: 100px;
+    }
 
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      background: purple;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
 
 <body>
 
-  <h1>Pi App</h1>
+  <h1>Pi Network Login</h1>
 
   <button id="pi-login-btn">
     Sign in with Pi
@@ -16,12 +38,15 @@
 
   <p id="user"></p>
 
+  <!-- Pi SDK -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+  <!-- Your JS -->
   <script src="auth.js"></script>
 
 </body>
 
-
+</html>
 
 
     
