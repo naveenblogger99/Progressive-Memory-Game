@@ -1,539 +1,441 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>Pi Login</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Animal Odyssey | Pi Memory Master</title>
   <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: Arial;
-      text-align: center;
-      padding-top: 100px;
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    button {
-      padding: 15px 30px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      background: purple;
-      color: white;
-      cursor: pointer;
+    /* light off-white background with subtle texture */
+    body {
+      background: linear-gradient(135deg, #f5f0e8 0%, #ede6db 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', 'Poppins', 'Comic Neue', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 12px;
+      margin: 0;
+      overflow-x: hidden;
+      position: relative;
     }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(circle at 25% 40%, rgba(180,160,130,0.08) 1.8%, transparent 2%);
+      background-size: 45px 45px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    #milestoneCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10000;
+    }
+
+    .wrong-cross, .correct-check {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(3rem, 15vw, 7rem);
+      font-weight: bold;
+      z-index: 10001;
+      pointer-events: none;
+      animation: fadePop 0.5s ease-out forwards;
+    }
+    .wrong-cross { color: #c0392b; text-shadow: 0 0 20px #ff8888; }
+    .correct-check { color: #27ae60; text-shadow: 0 0 20px #88ff88; }
+
+    @keyframes fadePop {
+      0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+      70% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    }
+
+    .milestone-toast {
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #ffd966, #ffaa33);
+      color: #5a2a0a;
+      font-size: clamp(1.2rem, 6vw, 2rem);
+      font-weight: bold;
+      padding: 16px 24px;
+      border-radius: 80px;
+      z-index: 10002;
+      text-align: center;
+      white-space: nowrap;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+      border: 3px solid gold;
+      animation: milestoneGlow 0.6s ease-out, floatUp 1.5s ease-out forwards;
+      font-family: monospace;
+      letter-spacing: 2px;
+    }
+
+    @media (max-width: 550px) {
+      .milestone-toast { white-space: normal; width: 80%; line-height: 1.3; font-size: 1.1rem; padding: 12px 18px; }
+    }
+
+    @keyframes milestoneGlow {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+      50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    @keyframes floatUp {
+      0% { top: 30%; opacity: 1; }
+      100% { top: 10%; opacity: 0; visibility: hidden; }
+    }
+
+    /* Internet Required Modal */
+    .internet-required-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.96);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 20000;
+      flex-direction: column;
+    }
+    .internet-modal-card {
+      background: #fff8f0;
+      border-radius: 48px;
+      padding: 28px 20px;
+      text-align: center;
+      max-width: 400px;
+      width: 85%;
+      border: 3px solid #ff8844;
+      box-shadow: 0 25px 45px rgba(0,0,0,0.3);
+    }
+    .internet-modal-card h2 { color: #c0392b; font-size: 1.5rem; margin: 10px 0; }
+    .internet-modal-card p { color: #5a3a2a; font-size: 0.9rem; margin: 12px 0; line-height: 1.4; }
+    .retry-btn { background: #e0a86e; border: none; padding: 12px 28px; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; width: auto; }
+    
+    .home-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(125deg, #faf5eb 0%, #f2ecd9 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .home-card {
+      background: rgba(255, 250, 240, 0.97);
+      backdrop-filter: blur(2px);
+      border-radius: 70px;
+      padding: 24px 18px 32px;
+      text-align: center;
+      border: 2px solid #d4a373;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      margin: auto;
+    }
+
+    .brain-icon { font-size: 4rem; margin-bottom: 10px; animation: gentleFloat 3s infinite; }
+    @keyframes gentleFloat { 0%{transform:translateY(0px);} 50%{transform:translateY(-8px);} 100%{transform:translateY(0px);} }
+    
+    .internet-status { background: #e8e0d0; border-radius: 60px; padding: 8px 16px; margin: 12px 0; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #c9b28b; color: #3a2a1a; }
+    .internet-status.online { background: #d4e6d4; border-color: #5a9e5a; color: #1a4a1a; }
+    .internet-status.offline { background: #f0d8d8; border-color: #c96a6a; color: #8a2a2a; }
+    
+    .highscore-box { background: #fff8ef; border-radius: 60px; padding: 12px; margin: 15px 0; border: 2px solid #d4a373; }
+    .highscore-label { font-size: 0.8rem; color: #8a6a3a; letter-spacing: 1px; }
+    .highscore-value { font-size: 2rem; font-weight: bold; color: #b45f2b; }
+    .highscore-player { font-size: 0.85rem; color: #6a4a2a; margin-top: 5px; font-weight: bold; word-break: break-word; }
+    .difficulty-badge { background: #e8dcc8; border-radius: 50px; padding: 6px 14px; display: inline-block; margin: 10px 0; font-weight: bold; color: #5a3a1a; border: 1px solid #c9aa7a; font-size: 0.8rem; }
+    
+    /* Pi Button Style */
+    .pi-login-area {
+      margin: 15px 0;
+    }
+    .pi-login-btn {
+      background: linear-gradient(95deg, #e0a86e, #c9854a);
+      border: none;
+      padding: 16px;
+      font-weight: bold;
+      border-radius: 70px;
+      width: 100%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: 0.05s linear;
+      box-shadow: 0 5px 0 #8a541f;
+      color: #fff2e2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .pi-login-btn:active { transform: translateY(3px); }
+    .pi-login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .pi-username {
+      background: #fff9f0;
+      border-radius: 70px;
+      padding: 12px;
+      margin: 15px 0;
+      border: 2px solid #d4a373;
+      font-weight: bold;
+      color: #5a3a1a;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .error-msg { color: #c0392b; font-size: 0.7rem; display: none; margin-top: 5px; font-weight: bold; }
+    .start-btn { background: linear-gradient(95deg, #4caf50, #2e7d32); border: none; padding: 16px; font-weight: bold; border-radius: 70px; width: 100%; font-size: 1.2rem; cursor: pointer; transition: 0.05s linear; box-shadow: 0 5px 0 #1b5e20; color: white; margin-top: 10px; }
+    .start-btn:active { transform: translateY(3px); }
+    .start-btn.disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .rules-popup {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(245, 240, 230, 0.98); backdrop-filter: blur(8px);
+      display: flex; justify-content: center; align-items: center; z-index: 2000;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .rules-card {
+      background: #fffdf7; border-radius: 48px; padding: 20px 16px; max-width: 650px; width: 100%;
+      max-height: 90vh; overflow-y: auto; border: 3px solid #d4a373;
+    }
+    .rule-section { background: #faf5ea; border-radius: 40px; padding: 12px; margin: 12px 0; border-left: 7px solid #d4a373; }
+    .rule-title { font-size: 1.1rem; font-weight: bold; color: #8a5a2a; margin-bottom: 8px; }
+    .difficulty-table { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 12px; }
+    .difficulty-item { background: #fff5e6; border-radius: 40px; padding: 8px; font-size: 0.7rem; text-align: center; border: 1px solid #e0c8a8; color: #4a3a2a; }
+    .internet-warning { background: #ffe8e0; border-left-color: #e05a2a; color: #a03a1a; font-weight: bold; }
+    .game-description { background: #fef7e8; border-radius: 40px; padding: 12px; margin: 10px 0; text-align: left; line-height: 1.5; color: #4a3a2a; border: 1px solid #e6d5ba; font-size: 0.85rem; }
+    .popup-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+    .popup-btn { padding: 10px 24px; border-radius: 60px; font-weight: bold; cursor: pointer; border: none; font-size: 0.9rem; }
+    .play-btn { background: #6fbf6f; color: #1a3a1a; box-shadow: 0 3px 0 #3a8a3a; }
+    .skip-btn { background: #e0b07a; color: #4a2a0a; box-shadow: 0 3px 0 #b87a3a; }
+
+    .game-container { display: none; width: 100%; max-width: 700px; margin: 0 auto; }
+    .game-wrapper { background: #ede3d3cc; border-radius: 55px; padding: 12px; border: 2px solid #d4a373; }
+    .game-card { background: #fffcf5dd; backdrop-filter: blur(2px); border-radius: 48px; padding: 15px 12px; text-align: center; border: 1px solid #e6cfaa; }
+    .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+    .player-name-box { background: #e8ddcc; padding: 4px 14px; border-radius: 40px; font-weight: bold; color: #5a3a1a; font-size: 0.85rem; word-break: break-word; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
+    .level-box { background: linear-gradient(135deg, #e0a86e, #c9854a); padding: 4px 16px; border-radius: 60px; }
+    .level-number { font-size: 1.6rem; font-weight: 900; background: white; padding: 0 18px; border-radius: 60px; color: #c96a2a; line-height: 1.2; }
+    .sound-toggle { background: #e8ddcc; padding: 6px 14px; border-radius: 60px; cursor: pointer; font-size: 1.2rem; color: #5a3a1a; }
+    .penalty-badge { background: #f0cfcf; padding: 3px 12px; border-radius: 50px; font-size: 0.6rem; margin-right: 6px; font-weight: bold; color: #a0422a; display: inline-block; }
+    .difficulty-tag { background: #dfd0b8; padding: 3px 12px; border-radius: 50px; font-size: 0.6rem; font-weight: bold; color: #6a4a2a; display: inline-block; }
+    .sequence-screen { background: #fef7eccc; border-radius: 45px; padding: 12px; margin: 12px 0; border: 2px solid #d4a373; }
+    .timer-bar { background: #e8ddcc; border-radius: 30px; height: 8px; margin-bottom: 10px; overflow: hidden; }
+    .timer-fill { background: linear-gradient(90deg, #e0a86e, #c9854a); width: 100%; height: 100%; }
+    .auto-timer { background: #e8ddcc; display: inline-block; padding: 4px 14px; border-radius: 30px; margin-bottom: 10px; font-size: 0.7rem; color: #6a4a2a; font-weight: bold; }
+    .sequence-display { font-size: 1.4rem; background: #fff5e8; padding: 12px; border-radius: 50px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; min-height: 75px; align-items: center; border: 1px solid #dec89e; color: #3a2a1a; word-break: break-word; }
+    .animals-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 18px 0; }
+    .animal-btn { aspect-ratio: 1 / 1; border-radius: 40px; background: #fdf3e4; display: flex; align-items: center; justify-content: center; font-size: clamp(1.3rem, 8vw, 2.2rem); cursor: pointer; border: 3px solid #d4a373; transition: 0.05s linear; font-weight: bold; color: #5a3a1a; box-shadow: 0 5px 0 #c9aa7a; background: #fff4e4; text-align: center; padding: 8px; }
+    .animal-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c9aa7a; }
+    @media (max-width: 480px) { .animal-btn { font-size: 1.5rem; } .sequence-display { font-size: 1rem; gap: 6px; } }
+    .color-red { background: #f8d4d4; border-color: #d48a6a; }
+    .color-blue { background: #d4e0f8; border-color: #7a9ad4; }
+    .color-green { background: #d4f0d4; border-color: #6aa86a; }
+    .color-yellow { background: #faf0c8; border-color: #e0ba6a; }
+    .color-purple { background: #e8d8f8; border-color: #b07ad4; }
+    .size-small { font-size: 1.2rem; }
+    .size-medium { font-size: 1.8rem; }
+    .size-large { font-size: 2.4rem; }
+    .progress-bar { background: #e8ddcc; border-radius: 40px; height: 8px; overflow: hidden; margin: 12px 0; }
+    .progress-fill { background: linear-gradient(90deg, #c9a06a, #e0a86e); width: 0%; height: 100%; }
+    .stats { color: #6a4a2a; font-size: 0.8rem; margin-top: 8px; display: flex; justify-content: space-between; font-weight: bold; }
+    .status { background: #fef5e8; border-radius: 45px; padding: 10px; margin-top: 12px; color: #5a3a1a; border-left: 6px solid #d4a373; font-size: 0.8rem; font-weight: 500; }
+    .internet-badge { background: #e8ddcc; padding: 3px 12px; border-radius: 50px; font-size: 0.6rem; margin-left: 6px; color: #5a3a1a; display: inline-block; }
+    .leaderboard-table { width:100%; border-collapse:collapse; font-size:0.7rem; color: #4a3a2a; }
+    .leaderboard-table th, .leaderboard-table td { padding: 6px 2px; border-bottom:1px solid #e0c8a8; text-align: center; }
+    .top-3 { color: #c97a2a; font-weight: bold; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #f5eee2; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #d4a373; border-radius: 10px; }
   </style>
 </head>
-
 <body>
 
-  <h1>Pi Network Login</h1>
-
-  <button id="pi-login-btn">
-    Sign in with Pi
-  </button>
-
-  <p id="user"></p>
-
-  <!-- Pi SDK -->
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-  <!-- Your JS -->
-  <script src="auth.js"></script>
-
-</body>
-
-</html>
-
-
-    
-    
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Animal Odyssey | Memory Master | Highscore with Name</title>
-
-
-
-
-
-    
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* light off-white background with subtle texture */
-        body {
-            background: linear-gradient(135deg, #f5f0e8 0%, #ede6db 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', 'Poppins', 'Comic Neue', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            padding: 12px;
-            margin: 0;
-            overflow-x: hidden;
-            position: relative;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: radial-gradient(circle at 25% 40%, rgba(180,160,130,0.08) 1.8%, transparent 2%);
-            background-size: 45px 45px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 9999;
-        }
-
-        #milestoneCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10000;
-        }
-
-        .wrong-cross, .correct-check {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: clamp(3rem, 15vw, 7rem);
-            font-weight: bold;
-            z-index: 10001;
-            pointer-events: none;
-            animation: fadePop 0.5s ease-out forwards;
-        }
-        .wrong-cross { color: #c0392b; text-shadow: 0 0 20px #ff8888; }
-        .correct-check { color: #27ae60; text-shadow: 0 0 20px #88ff88; }
-
-        @keyframes fadePop {
-            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
-            70% { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
-        }
-
-        .milestone-toast {
-            position: fixed;
-            top: 30%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #ffd966, #ffaa33);
-            color: #5a2a0a;
-            font-size: clamp(1.2rem, 6vw, 2rem);
-            font-weight: bold;
-            padding: 16px 24px;
-            border-radius: 80px;
-            z-index: 10002;
-            text-align: center;
-            white-space: nowrap;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            border: 3px solid gold;
-            animation: milestoneGlow 0.6s ease-out, floatUp 1.5s ease-out forwards;
-            font-family: monospace;
-            letter-spacing: 2px;
-        }
-
-        @media (max-width: 550px) {
-            .milestone-toast { white-space: normal; width: 80%; line-height: 1.3; font-size: 1.1rem; padding: 12px 18px; }
-        }
-
-        @keyframes milestoneGlow {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        }
-        @keyframes floatUp {
-            0% { top: 30%; opacity: 1; }
-            100% { top: 10%; opacity: 0; visibility: hidden; }
-        }
-
-        /* Internet Required Modal */
-        .internet-required-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.96);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 20000;
-            flex-direction: column;
-        }
-        .internet-modal-card {
-            background: #fff8f0;
-            border-radius: 48px;
-            padding: 28px 20px;
-            text-align: center;
-            max-width: 400px;
-            width: 85%;
-            border: 3px solid #ff8844;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.3);
-        }
-        .internet-modal-card h2 { color: #c0392b; font-size: 1.5rem; margin: 10px 0; }
-        .internet-modal-card p { color: #5a3a2a; font-size: 0.9rem; margin: 12px 0; line-height: 1.4; }
-        .retry-btn { background: #e0a86e; border: none; padding: 12px 28px; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; width: auto; }
-        
-        .home-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(125deg, #faf5eb 0%, #f2ecd9 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .home-card {
-            background: rgba(255, 250, 240, 0.97);
-            backdrop-filter: blur(2px);
-            border-radius: 70px;
-            padding: 24px 18px 32px;
-            text-align: center;
-            border: 2px solid #d4a373;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            margin: auto;
-        }
-
-        .brain-icon { font-size: 4rem; margin-bottom: 10px; animation: gentleFloat 3s infinite; }
-        @keyframes gentleFloat { 0%{transform:translateY(0px);} 50%{transform:translateY(-8px);} 100%{transform:translateY(0px);} }
-        
-        .internet-status { background: #e8e0d0; border-radius: 60px; padding: 8px 16px; margin: 12px 0; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #c9b28b; color: #3a2a1a; }
-        .internet-status.online { background: #d4e6d4; border-color: #5a9e5a; color: #1a4a1a; }
-        .internet-status.offline { background: #f0d8d8; border-color: #c96a6a; color: #8a2a2a; }
-        
-        .highscore-box { background: #fff8ef; border-radius: 60px; padding: 12px; margin: 15px 0; border: 2px solid #d4a373; }
-        .highscore-label { font-size: 0.8rem; color: #8a6a3a; letter-spacing: 1px; }
-        .highscore-value { font-size: 2rem; font-weight: bold; color: #b45f2b; }
-        .highscore-player { font-size: 0.85rem; color: #6a4a2a; margin-top: 5px; font-weight: bold; word-break: break-word; }
-        .difficulty-badge { background: #e8dcc8; border-radius: 50px; padding: 6px 14px; display: inline-block; margin: 10px 0; font-weight: bold; color: #5a3a1a; border: 1px solid #c9aa7a; font-size: 0.8rem; }
-        .name-input-area { background: #fff9f0; border-radius: 70px; margin: 15px 0; border: 2px solid #d4a373; }
-        .name-input-area input { width: 100%; padding: 14px; background: transparent; border: none; color: #3a2a1a; text-align: center; font-size: 1rem; outline: none; font-weight: 500; }
-        .error-msg { color: #c0392b; font-size: 0.7rem; display: none; margin-top: 5px; font-weight: bold; }
-        .start-btn { background: linear-gradient(95deg, #e0a86e, #c9854a); border: none; padding: 16px; font-weight: bold; border-radius: 70px; width: 100%; font-size: 1.2rem; cursor: pointer; transition: 0.05s linear; box-shadow: 0 5px 0 #8a541f; color: #fff2e2; }
-        .start-btn:active { transform: translateY(3px); }
-        .start-btn.disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-        .rules-popup {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(245, 240, 230, 0.98); backdrop-filter: blur(8px);
-            display: flex; justify-content: center; align-items: center; z-index: 2000;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        .rules-card {
-            background: #fffdf7; border-radius: 48px; padding: 20px 16px; max-width: 650px; width: 100%;
-            max-height: 90vh; overflow-y: auto; border: 3px solid #d4a373;
-        }
-        .rule-section { background: #faf5ea; border-radius: 40px; padding: 12px; margin: 12px 0; border-left: 7px solid #d4a373; }
-        .rule-title { font-size: 1.1rem; font-weight: bold; color: #8a5a2a; margin-bottom: 8px; }
-        .difficulty-table { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 12px; }
-        .difficulty-item { background: #fff5e6; border-radius: 40px; padding: 8px; font-size: 0.7rem; text-align: center; border: 1px solid #e0c8a8; color: #4a3a2a; }
-        .internet-warning { background: #ffe8e0; border-left-color: #e05a2a; color: #a03a1a; font-weight: bold; }
-        .game-description { background: #fef7e8; border-radius: 40px; padding: 12px; margin: 10px 0; text-align: left; line-height: 1.5; color: #4a3a2a; border: 1px solid #e6d5ba; font-size: 0.85rem; }
-        .popup-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
-        .popup-btn { padding: 10px 24px; border-radius: 60px; font-weight: bold; cursor: pointer; border: none; font-size: 0.9rem; }
-        .play-btn { background: #6fbf6f; color: #1a3a1a; box-shadow: 0 3px 0 #3a8a3a; }
-        .skip-btn { background: #e0b07a; color: #4a2a0a; box-shadow: 0 3px 0 #b87a3a; }
-
-        .game-container { display: none; width: 100%; max-width: 700px; margin: 0 auto; }
-        .game-wrapper { background: #ede3d3cc; border-radius: 55px; padding: 12px; border: 2px solid #d4a373; }
-        .game-card { background: #fffcf5dd; backdrop-filter: blur(2px); border-radius: 48px; padding: 15px 12px; text-align: center; border: 1px solid #e6cfaa; }
-        .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
-        .player-name-box { background: #e8ddcc; padding: 4px 14px; border-radius: 40px; font-weight: bold; color: #5a3a1a; font-size: 0.85rem; word-break: break-word; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
-        .level-box { background: linear-gradient(135deg, #e0a86e, #c9854a); padding: 4px 16px; border-radius: 60px; }
-        .level-number { font-size: 1.6rem; font-weight: 900; background: white; padding: 0 18px; border-radius: 60px; color: #c96a2a; line-height: 1.2; }
-        .sound-toggle { background: #e8ddcc; padding: 6px 14px; border-radius: 60px; cursor: pointer; font-size: 1.2rem; color: #5a3a1a; }
-        .penalty-badge { background: #f0cfcf; padding: 3px 12px; border-radius: 50px; font-size: 0.6rem; margin-right: 6px; font-weight: bold; color: #a0422a; display: inline-block; }
-        .difficulty-tag { background: #dfd0b8; padding: 3px 12px; border-radius: 50px; font-size: 0.6rem; font-weight: bold; color: #6a4a2a; display: inline-block; }
-        .sequence-screen { background: #fef7eccc; border-radius: 45px; padding: 12px; margin: 12px 0; border: 2px solid #d4a373; }
-        .timer-bar { background: #e8ddcc; border-radius: 30px; height: 8px; margin-bottom: 10px; overflow: hidden; }
-        .timer-fill { background: linear-gradient(90deg, #e0a86e, #c9854a); width: 100%; height: 100%; }
-        .auto-timer { background: #e8ddcc; display: inline-block; padding: 4px 14px; border-radius: 30px; margin-bottom: 10px; font-size: 0.7rem; color: #6a4a2a; font-weight: bold; }
-        .sequence-display { font-size: 1.4rem; background: #fff5e8; padding: 12px; border-radius: 50px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; min-height: 75px; align-items: center; border: 1px solid #dec89e; color: #3a2a1a; word-break: break-word; }
-        .animals-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 18px 0; }
-        .animal-btn { aspect-ratio: 1 / 1; border-radius: 40px; background: #fdf3e4; display: flex; align-items: center; justify-content: center; font-size: clamp(1.3rem, 8vw, 2.2rem); cursor: pointer; border: 3px solid #d4a373; transition: 0.05s linear; font-weight: bold; color: #5a3a1a; box-shadow: 0 5px 0 #c9aa7a; background: #fff4e4; text-align: center; padding: 8px; }
-        .animal-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c9aa7a; }
-        @media (max-width: 480px) { .animal-btn { font-size: 1.5rem; } .sequence-display { font-size: 1rem; gap: 6px; } }
-        .color-red { background: #f8d4d4; border-color: #d48a6a; }
-        .color-blue { background: #d4e0f8; border-color: #7a9ad4; }
-        .color-green { background: #d4f0d4; border-color: #6aa86a; }
-        .color-yellow { background: #faf0c8; border-color: #e0ba6a; }
-        .color-purple { background: #e8d8f8; border-color: #b07ad4; }
-        .size-small { font-size: 1.2rem; }
-        .size-medium { font-size: 1.8rem; }
-        .size-large { font-size: 2.4rem; }
-        .progress-bar { background: #e8ddcc; border-radius: 40px; height: 8px; overflow: hidden; margin: 12px 0; }
-        .progress-fill { background: linear-gradient(90deg, #c9a06a, #e0a86e); width: 0%; height: 100%; }
-        .stats { color: #6a4a2a; font-size: 0.8rem; margin-top: 8px; display: flex; justify-content: space-between; font-weight: bold; }
-        .status { background: #fef5e8; border-radius: 45px; padding: 10px; margin-top: 12px; color: #5a3a1a; border-left: 6px solid #d4a373; font-size: 0.8rem; font-weight: 500; }
-        .internet-badge { background: #e8ddcc; padding: 3px 12px; border-radius: 50px; font-size: 0.6rem; margin-left: 6px; color: #5a3a1a; display: inline-block; }
-        .leaderboard-table { width:100%; border-collapse:collapse; font-size:0.7rem; color: #4a3a2a; }
-        .leaderboard-table th, .leaderboard-table td { padding: 6px 2px; border-bottom:1px solid #e0c8a8; text-align: center; }
-        .top-3 { color: #c97a2a; font-weight: bold; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #f5eee2; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #d4a373; border-radius: 10px; }
-
-
-
-        
-    </style
-
->
-</head>
-
-
-        
-</head>
-<body>
-
-
-
-
-    
- 
 <canvas id="particleCanvas"></canvas>
 <canvas id="milestoneCanvas"></canvas>
 
 <div id="internetModal" class="internet-required-modal" style="display: none;">
-    <div class="internet-modal-card">
-        <div style="font-size: 3rem;">🌐❌</div>
-        <h2>INTERNET REQUIRED!</h2>
-        <p>⚠️ Active connection needed to play.<br>📡 Checked at start & after every 10th level (10,20,30...).<br>🔌 Connect to WiFi/Mobile Data and retry.</p>
-        <button class="retry-btn" id="retryInternetBtn">🔄 CHECK CONNECTION</button>
-    </div>
+  <div class="internet-modal-card">
+    <div style="font-size: 3rem;">🌐❌</div>
+    <h2>INTERNET REQUIRED!</h2>
+    <p>⚠️ Active connection needed to play.<br>📡 Checked at start & after every 10th level (10,20,30...).<br>🔌 Connect to WiFi/Mobile Data and retry.</p>
+    <button class="retry-btn" id="retryInternetBtn">🔄 CHECK CONNECTION</button>
+  </div>
 </div>
 
+<!-- HOME SCREEN with Pi Login -->
 <div class="home-screen" id="homeScreen">
-    <div class="home-card">
-        <div class="brain-icon">🧠✨🌐</div>
-        <div class="internet-status" id="homeInternetStatus"><span>🌐</span><span id="homeInternetText">Checking...</span></div>
-        
-        <div class="highscore-box">
-            <div class="highscore-label">🏆 HIGHEST LEVEL ACHIEVED 🏆</div>
-            <div class="highscore-value" id="highScoreValue">0</div>
-            <div class="highscore-player" id="highScorePlayerName">— No records yet —</div>
-        </div>
-        
-        <div class="difficulty-badge">🎯 LEVEL 1 → 1000 | CELEBRATION EVERY 10 LEVELS!</div>
-        <div class="name-input-area"><input type="text" id="playerNameInput" placeholder="ENTER YOUR NAME" maxlength="20" autocomplete="off"></div>
-        <div class="error-msg" id="nameErrorMsg">⚠️ Please enter your name to begin! ⚠️</div>
-        <button class="start-btn" id="startGameBtn">🚀 START ADVENTURE</button>
+  <div class="home-card">
+    <div class="brain-icon">🧠✨π</div>
+    <div class="internet-status" id="homeInternetStatus"><span>🌐</span><span id="homeInternetText">Checking...</span></div>
+    
+    <div class="highscore-box">
+      <div class="highscore-label">🏆 HIGHEST LEVEL ACHIEVED 🏆</div>
+      <div class="highscore-value" id="highScoreValue">0</div>
+      <div class="highscore-player" id="highScorePlayerName">— No records yet —</div>
     </div>
+    
+    <div class="difficulty-badge">🎯 LEVEL 1 → 1000 | CELEBRATION EVERY 10 LEVELS!</div>
+    
+    <!-- Pi Login Section (replaces name input) -->
+    <div class="pi-login-area">
+      <button id="piLoginBtn" class="pi-login-btn">🔐 Sign in with Pi Network</button>
+      <div id="piUserDisplay" style="display:none;" class="pi-username">✅ Logged as: <span id="piUsernameSpan"></span></div>
+    </div>
+    <div class="error-msg" id="piErrorMsg">⚠️ Please sign in with Pi to play! ⚠️</div>
+    <button class="start-btn" id="startGameBtn" disabled>🚀 START ADVENTURE</button>
+  </div>
 </div>
 
 <div class="rules-popup" id="rulesPopup" style="display: none;">
-    <div class="rules-card">
-        <div style="text-align:center;"><h2 style="color:#c97a2a;">🐉 ANIMAL ODYSSEY</h2><p style="color:#7a5a3a;">PROGRESSIVE MEMORY MASTER</p></div>
-        <div class="game-description">
-            📖 <strong>GAME DESCRIPTION</strong><br>
-            🧠 1000 levels of increasing difficulty! Each 10th level triggers massive celebration with confetti and golden toast. Wrong answer drops 2 levels.<br><br>
-            🌐 <strong style="color:#c0392b;">INTERNET IS MANDATORY:</strong> You need internet to START and after completing every 10th level (10,20,30...).
-        </div>
-        <div class="rule-section internet-warning"><div class="rule-title">⚠️ INTERNET RULE</div><div class="rule-text">🔴 Internet required to START.<br>🔴 After completing levels 10,20,30... game checks internet. If offline, you CANNOT proceed.</div></div>
-        <div class="rule-section"><div class="rule-title">🎯 LEVEL-WISE DIFFICULTY</div>
-        <div class="difficulty-table">
-            <div class="difficulty-item">1-5: 🐾 Basic Animals</div><div class="difficulty-item">6-10: 🐘 More Animals</div>
-            <div class="difficulty-item">11-20: 🌊 FISH</div><div class="difficulty-item">21-30: 🎨 SAME SHAPE COLOR</div>
-            <div class="difficulty-item">31-50: ⚪ SAME COLOR SIZE</div><div class="difficulty-item">51-100: 📖 NAMES+TEXT</div>
-            <div class="difficulty-item">101-150: ⏱️ 2 SEC + SHAPES</div><div class="difficulty-item">151-200: ✍️ SPELLING</div>
-            <div class="difficulty-item">201-500: 🔥 SPELLING+REPEAT</div><div class="difficulty-item">501-1000: 💀 EXTREME+LEGEND</div>
-        </div></div>
-        <div class="rule-section"><div class="rule-title">🏆 TOP 100</div><button class="popup-btn skip-btn" id="showLeaderBtn" style="width:100%; margin-bottom:10px;">📊 SHOW LEADERBOARD</button><div id="leaderboardList"></div></div>
-        <div class="popup-buttons"><button class="popup-btn play-btn" id="playBtn">🎮 BEGIN</button><button class="popup-btn skip-btn" id="skipBtn">⏩ SKIP</button></div>
-    </div>
+  <div class="rules-card">
+    <div style="text-align:center;"><h2 style="color:#c97a2a;">🐉 ANIMAL ODYSSEY</h2><p style="color:#7a5a3a;">PROGRESSIVE MEMORY MASTER | Pi Powered</p></div>
+    <div class="game-description">📖 <strong>GAME DESCRIPTION</strong><br>🧠 1000 levels of increasing difficulty! Each 10th level triggers massive celebration. Wrong answer drops 2 levels.<br><br>🌐 <strong style="color:#c0392b;">INTERNET MANDATORY + Pi Login Required</strong> Your progress is saved with your Pi username.</div>
+    <div class="rule-section internet-warning"><div class="rule-title">⚠️ Pi & INTERNET RULE</div><div class="rule-text">🔐 Sign in with Pi Network to start. Progress linked to your Pi username.<br>🔴 Internet required to START and after levels 10,20,30...</div></div>
+    <div class="rule-section"><div class="rule-title">🎯 LEVEL-WISE DIFFICULTY</div><div class="difficulty-table"><div class="difficulty-item">1-5: 🐾 Basic Animals</div><div class="difficulty-item">6-10: 🐘 More Animals</div><div class="difficulty-item">11-20: 🌊 FISH</div><div class="difficulty-item">21-30: 🎨 SAME SHAPE COLOR</div><div class="difficulty-item">31-50: ⚪ SAME COLOR SIZE</div><div class="difficulty-item">51-100: 📖 NAMES+TEXT</div><div class="difficulty-item">101-150: ⏱️ 2 SEC + SHAPES</div><div class="difficulty-item">151-200: ✍️ SPELLING</div><div class="difficulty-item">201-500: 🔥 SPELLING+REPEAT</div><div class="difficulty-item">501-1000: 💀 EXTREME+LEGEND</div></div></div>
+    <div class="rule-section"><div class="rule-title">🏆 TOP 100</div><button class="popup-btn skip-btn" id="showLeaderBtn" style="width:100%; margin-bottom:10px;">📊 SHOW LEADERBOARD</button><div id="leaderboardList"></div></div>
+    <div class="popup-buttons"><button class="popup-btn play-btn" id="playBtn">🎮 BEGIN</button><button class="popup-btn skip-btn" id="skipBtn">⏩ SKIP</button></div>
+  </div>
 </div>
 
 <div class="game-container" id="gameContainer">
-    <div class="game-wrapper"><div class="game-card">
-        <div class="header"><div class="player-name-box">👤 <span id="playerNameDisplay"></span></div><div class="level-box"><span class="level-number" id="levelNum">1</span></div><div class="sound-toggle" id="soundToggle">🔊</div></div>
-        <div><span class="penalty-badge">⚠️ -2 LVLS</span><span class="internet-badge" id="gameInternetBadge"></span><span class="difficulty-tag" id="difficultyTag">START</span></div>
-        <div class="sequence-screen"><div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div><div class="auto-timer" id="autoTimer">🔮 SEQUENCE</div><div class="sequence-display" id="sequenceDisplay">✨ ✨ ✨</div></div>
-        <div class="animals-grid" id="animalsContainer"></div>
-        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="stats"><span>🎯 PROGRESS</span><span id="inputCounter">0/0</span></div>
-        <div class="status" id="statusMsg">🧠 WATCH & REPEAT</div>
-    </div></div>
+  <div class="game-wrapper"><div class="game-card">
+    <div class="header"><div class="player-name-box">👤 π <span id="playerNameDisplay"></span></div><div class="level-box"><span class="level-number" id="levelNum">1</span></div><div class="sound-toggle" id="soundToggle">🔊</div></div>
+    <div><span class="penalty-badge">⚠️ -2 LVLS</span><span class="internet-badge" id="gameInternetBadge"></span><span class="difficulty-tag" id="difficultyTag">START</span></div>
+    <div class="sequence-screen"><div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div><div class="auto-timer" id="autoTimer">🔮 SEQUENCE</div><div class="sequence-display" id="sequenceDisplay">✨ ✨ ✨</div></div>
+    <div class="animals-grid" id="animalsContainer"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="stats"><span>🎯 PROGRESS</span><span id="inputCounter">0/0</span></div>
+    <div class="status" id="statusMsg">🧠 WATCH & REPEAT</div>
+  </div></div>
 </div>
 
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script>
+  // ---------- Pi Network Integration ----------
+  let piUser = null;        // {uid, username}
+  let piInitialized = false;
+  let currentLevel = 1, secretSeq = [], playerSeq = [], gameActive = false, levelCompleted = false;
+  let timerInterval = null, soundOn = true, isOnline = true;
+  let currentItems = [], currentStyles = [];
+  let canvas, ctx, particles = [], particleAnim = null;
+  let milestoneCanvas, milestoneCtx, milestoneParticles = [], milestoneAnim = null;
 
-    
-    // ========== CELEBRATION SYSTEM ==========
-    let milestoneCanvas, milestoneCtx, milestoneParticles = [], milestoneAnim = null;
-    function initMilestoneCanvas() { milestoneCanvas = document.getElementById("milestoneCanvas"); milestoneCtx = milestoneCanvas.getContext("2d"); resizeMilestone(); window.addEventListener("resize", resizeMilestone); }
-    function resizeMilestone() { milestoneCanvas.width = window.innerWidth; milestoneCanvas.height = window.innerHeight; }
-    
-    function intenseCelebration(level) {
-        if(milestoneAnim) cancelAnimationFrame(milestoneAnim);
-        milestoneParticles = [];
-        let colors = ["#FFD700", "#FFA500", "#FF69B4", "#00CED1", "#32CD32", "#FF4500", "#FFDAB9", "#DDA0DD"];
-        for(let i = 0; i < 280; i++) {
-            milestoneParticles.push({
-                x: milestoneCanvas.width / 2 + (Math.random() - 0.5) * 200,
-                y: milestoneCanvas.height / 2 + (Math.random() - 0.5) * 150,
-                vx: (Math.random() - 0.5) * 18,
-                vy: (Math.random() - 0.5) * 18 - 9,
-                size: Math.random() * 9 + 4,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                life: 1, decay: 0.012, rotation: Math.random() * 360, spin: (Math.random() - 0.5) * 15
-            });
-        }
-        function drawMilestone() {
-            if(!milestoneCtx) return;
-            milestoneCtx.clearRect(0, 0, milestoneCanvas.width, milestoneCanvas.height);
-            let alive = false;
-            for(let p of milestoneParticles) {
-                if(p.life <= 0) continue;
-                alive = true;
-                p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.life -= p.decay; p.rotation += p.spin;
-                milestoneCtx.globalAlpha = p.life;
-                milestoneCtx.fillStyle = p.color;
-                milestoneCtx.save();
-                milestoneCtx.translate(p.x, p.y);
-                milestoneCtx.rotate(p.rotation * Math.PI / 180);
-                milestoneCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
-                milestoneCtx.restore();
-            }
-            if(alive) milestoneAnim = requestAnimationFrame(drawMilestone);
-            else { cancelAnimationFrame(milestoneAnim); milestoneCtx.clearRect(0,0,milestoneCanvas.width,milestoneCanvas.height); }
-        }
-        drawMilestone();
-        let toast = document.createElement("div"); toast.className = "milestone-toast";
-        toast.innerHTML = `🎉🎊 MILESTONE ${level} COMPLETED! 🎊🎉<br>🏆 LEGENDARY ACHIEVEMENT! 🏆`;
-        document.body.appendChild(toast); setTimeout(() => toast.remove(), 1800);
-        playMilestoneFanfare(); regularCelebration();
+  // Helper functions (celebration, canvas, game logic) merged from original
+  function initCanvas(){ canvas=document.getElementById("particleCanvas"); ctx=canvas.getContext("2d"); resize(); window.addEventListener("resize",resize); }
+  function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+  function initMilestoneCanvas() { milestoneCanvas = document.getElementById("milestoneCanvas"); milestoneCtx = milestoneCanvas.getContext("2d"); resizeMilestone(); window.addEventListener("resize", resizeMilestone); }
+  function resizeMilestone() { milestoneCanvas.width = window.innerWidth; milestoneCanvas.height = window.innerHeight; }
+  
+  function intenseCelebration(level) {
+    if(milestoneAnim) cancelAnimationFrame(milestoneAnim);
+    milestoneParticles = [];
+    let colors = ["#FFD700", "#FFA500", "#FF69B4", "#00CED1", "#32CD32", "#FF4500", "#FFDAB9", "#DDA0DD"];
+    for(let i = 0; i < 280; i++) {
+      milestoneParticles.push({ x: milestoneCanvas.width/2 + (Math.random()-0.5)*200, y: milestoneCanvas.height/2 + (Math.random()-0.5)*150, vx: (Math.random()-0.5)*18, vy: (Math.random()-0.5)*18-9, size: Math.random()*9+4, color: colors[Math.floor(Math.random()*colors.length)], life:1, decay:0.012, rotation: Math.random()*360, spin: (Math.random()-0.5)*15 });
     }
-    function playMilestoneFanfare() { if(!soundOn) return; try { let audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); let now = audioCtx.currentTime; let freqs = [523.25, 659.25, 783.99, 1046.50, 1318.52]; freqs.forEach((f, idx) => { let osc = audioCtx.createOscillator(), gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = f; gain.gain.value = 0.25; osc.type = "sine"; osc.start(now + idx * 0.12); gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.12 + 0.45); osc.stop(now + idx * 0.12 + 0.45); }); } catch(e) {} }
-    function regularCelebration() { if(particleAnim) cancelAnimationFrame(particleAnim); particles = []; for(let i=0;i<130;i++) { particles.push({ x:canvas.width/2, y:canvas.height/2, vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*12-5, size:Math.random()*8+3, color:`hsl(${Math.random()*360},75%,60%)`, life:1, decay:0.018 }); } function drawReg(){ if(!ctx) return; ctx.clearRect(0,0,canvas.width,canvas.height); let alive=false; for(let p of particles){ if(p.life<=0) continue; alive=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.2; p.life-=p.decay; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); } if(alive) particleAnim = requestAnimationFrame(drawReg); else cancelAnimationFrame(particleAnim); } drawReg(); setTimeout(()=>{ if(particleAnim) cancelAnimationFrame(particleAnim); ctx?.clearRect(0,0,canvas.width,canvas.height); },1600); }
-    
-    // ========== GAME LOGIC ==========
-    function getItemSet(level) {
-        if (level <= 5) return [{id:0,emoji:"🐜",name:"ANT"},{id:1,emoji:"🦎",name:"LIZARD"},{id:2,emoji:"🐶",name:"DOG"},{id:3,emoji:"🦆",name:"DUCK"}];
-        if (level <= 10) return [{id:4,emoji:"🐘",name:"ELEPHANT"},{id:5,emoji:"🐸",name:"FROG"},{id:6,emoji:"🐝",name:"BEE"},{id:7,emoji:"🐙",name:"OCTOPUS"}];
-        if (level <= 20) return [{id:20,emoji:"🐟",name:"FISH"},{id:21,emoji:"🐠",name:"TROPICAL"},{id:22,emoji:"🐡",name:"PUFFER"},{id:23,emoji:"🐬",name:"DOLPHIN"}];
-        if (level <= 30) return [{id:30,emoji:"🔴",name:"RED"},{id:31,emoji:"🔵",name:"BLUE"},{id:32,emoji:"🟢",name:"GREEN"},{id:33,emoji:"🟡",name:"YELLOW"}];
-        if (level <= 50) return [{id:40,emoji:"⚪",name:"DOT"},{id:41,emoji:"⚪",name:"DOT"},{id:42,emoji:"⚪",name:"DOT"},{id:43,emoji:"⚪",name:"DOT"}];
-        if (level <= 100) return [{id:50,emoji:"🐕",name:"DOG"},{id:51,emoji:"🐈",name:"CAT"},{id:52,emoji:"🐁",name:"MOUSE"},{id:53,emoji:"🐘",name:"ELEPHANT"}];
-        if (level <= 150) return [{id:60,emoji:"⭐",name:"STAR"},{id:61,emoji:"🔺",name:"TRIANGLE"},{id:62,emoji:"⬛",name:"SQUARE"},{id:63,emoji:"🔘",name:"CIRCLE"}];
-        if (level <= 200) return [{id:70,emoji:"🐧",name:"PENGUIN"},{id:71,emoji:"🦁",name:"LION"},{id:72,emoji:"🐨",name:"KOALA"},{id:73,emoji:"🐯",name:"TIGER"}];
-        if (level <= 500) return [{id:80,emoji:"🐉",name:"DRAGON"},{id:81,emoji:"🦄",name:"UNICORN"},{id:82,emoji:"🐲",name:"WYVERN"},{id:83,emoji:"🐺",name:"WOLF"}];
-        return [{id:90,emoji:"🔥",name:"PHOENIX"},{id:91,emoji:"👑",name:"KING"},{id:92,emoji:"⚡",name:"THOR"},{id:93,emoji:"🌙",name:"LUNAR"}];
+    function drawMilestone() { if(!milestoneCtx) return; milestoneCtx.clearRect(0,0,milestoneCanvas.width,milestoneCanvas.height); let alive=false; for(let p of milestoneParticles){ if(p.life<=0) continue; alive=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.25; p.life-=p.decay; p.rotation+=p.spin; milestoneCtx.globalAlpha=p.life; milestoneCtx.fillStyle=p.color; milestoneCtx.save(); milestoneCtx.translate(p.x,p.y); milestoneCtx.rotate(p.rotation*Math.PI/180); milestoneCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size); milestoneCtx.restore(); } if(alive) milestoneAnim = requestAnimationFrame(drawMilestone); else { cancelAnimationFrame(milestoneAnim); milestoneCtx.clearRect(0,0,milestoneCanvas.width,milestoneCanvas.height); } }
+    drawMilestone();
+    let toast = document.createElement("div"); toast.className = "milestone-toast"; toast.innerHTML = `🎉🎊 MILESTONE ${level} COMPLETED! 🎊🎉<br>🏆 LEGENDARY ACHIEVEMENT! 🏆`; document.body.appendChild(toast); setTimeout(()=>toast.remove(),1800);
+    playMilestoneFanfare(); regularCelebration();
+  }
+  function playMilestoneFanfare() { if(!soundOn) return; try { let audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); let now = audioCtx.currentTime; let freqs = [523.25, 659.25, 783.99, 1046.50, 1318.52]; freqs.forEach((f, idx) => { let osc = audioCtx.createOscillator(), gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = f; gain.gain.value = 0.25; osc.type = "sine"; osc.start(now + idx * 0.12); gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.12 + 0.45); osc.stop(now + idx * 0.12 + 0.45); }); } catch(e) {} }
+  function regularCelebration() { if(particleAnim) cancelAnimationFrame(particleAnim); particles = []; for(let i=0;i<130;i++) { particles.push({ x:canvas.width/2, y:canvas.height/2, vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*12-5, size:Math.random()*8+3, color:`hsl(${Math.random()*360},75%,60%)`, life:1, decay:0.018 }); } function drawReg(){ if(!ctx) return; ctx.clearRect(0,0,canvas.width,canvas.height); let alive=false; for(let p of particles){ if(p.life<=0) continue; alive=true; p.x+=p.vx; p.y+=p.vy; p.vy+=0.2; p.life-=p.decay; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); } if(alive) particleAnim = requestAnimationFrame(drawReg); else cancelAnimationFrame(particleAnim); } drawReg(); setTimeout(()=>{ if(particleAnim) cancelAnimationFrame(particleAnim); ctx?.clearRect(0,0,canvas.width,canvas.height); },1600); }
+  function playSound(type){ if(!soundOn) return; let audioCtx=new (window.AudioContext||window.webkitAudioContext)(); audioCtx.resume(); let osc=audioCtx.createOscillator(), gain=audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); if(type==="correct"){ osc.frequency.value=880; gain.gain.value=0.15; osc.type="sine"; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.3); osc.stop(audioCtx.currentTime+0.3); } else if(type==="wrong"){ osc.frequency.value=440; osc.type="sawtooth"; gain.gain.value=0.15; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.4); osc.stop(audioCtx.currentTime+0.4); } else if(type==="levelup"){ let notes=[523,659,784]; notes.forEach((f,i)=>{ let o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.frequency.value=f; g.gain.value=0.12; o.type="triangle"; o.start(audioCtx.currentTime+i*0.12); g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+i*0.12+0.35); o.stop(audioCtx.currentTime+i*0.12+0.35); }); } }
+  function showFeedback(type){ let div=document.createElement("div"); div.className=type==="wrong"?"wrong-cross":"correct-check"; div.innerText=type==="wrong"?"❌":"✅"; document.body.appendChild(div); setTimeout(()=>div.remove(),500); if(type==="wrong") playSound("wrong"); else playSound("correct"); }
+  
+  function getItemSet(level) { /* same as original */ if (level <= 5) return [{id:0,emoji:"🐜",name:"ANT"},{id:1,emoji:"🦎",name:"LIZARD"},{id:2,emoji:"🐶",name:"DOG"},{id:3,emoji:"🦆",name:"DUCK"}]; if (level <= 10) return [{id:4,emoji:"🐘",name:"ELEPHANT"},{id:5,emoji:"🐸",name:"FROG"},{id:6,emoji:"🐝",name:"BEE"},{id:7,emoji:"🐙",name:"OCTOPUS"}]; if (level <= 20) return [{id:20,emoji:"🐟",name:"FISH"},{id:21,emoji:"🐠",name:"TROPICAL"},{id:22,emoji:"🐡",name:"PUFFER"},{id:23,emoji:"🐬",name:"DOLPHIN"}]; if (level <= 30) return [{id:30,emoji:"🔴",name:"RED"},{id:31,emoji:"🔵",name:"BLUE"},{id:32,emoji:"🟢",name:"GREEN"},{id:33,emoji:"🟡",name:"YELLOW"}]; if (level <= 50) return [{id:40,emoji:"⚪",name:"DOT"},{id:41,emoji:"⚪",name:"DOT"},{id:42,emoji:"⚪",name:"DOT"},{id:43,emoji:"⚪",name:"DOT"}]; if (level <= 100) return [{id:50,emoji:"🐕",name:"DOG"},{id:51,emoji:"🐈",name:"CAT"},{id:52,emoji:"🐁",name:"MOUSE"},{id:53,emoji:"🐘",name:"ELEPHANT"}]; if (level <= 150) return [{id:60,emoji:"⭐",name:"STAR"},{id:61,emoji:"🔺",name:"TRIANGLE"},{id:62,emoji:"⬛",name:"SQUARE"},{id:63,emoji:"🔘",name:"CIRCLE"}]; if (level <= 200) return [{id:70,emoji:"🐧",name:"PENGUIN"},{id:71,emoji:"🦁",name:"LION"},{id:72,emoji:"🐨",name:"KOALA"},{id:73,emoji:"🐯",name:"TIGER"}]; if (level <= 500) return [{id:80,emoji:"🐉",name:"DRAGON"},{id:81,emoji:"🦄",name:"UNICORN"},{id:82,emoji:"🐲",name:"WYVERN"},{id:83,emoji:"🐺",name:"WOLF"}]; return [{id:90,emoji:"🔥",name:"PHOENIX"},{id:91,emoji:"👑",name:"KING"},{id:92,emoji:"⚡",name:"THOR"},{id:93,emoji:"🌙",name:"LUNAR"}]; }
+  function getStyleModifiers(level, idx) { let colorClass="", sizeClass="size-medium"; if(level>=21 && level<=30){ const cols=["color-red","color-blue","color-green","color-yellow"]; colorClass=cols[idx%cols.length]; } if(level>=31 && level<=50){ colorClass="color-blue"; const sz=["size-small","size-medium","size-large","size-small"]; sizeClass=sz[idx%sz.length]; } if(level>=101 && level<=150){ const sz=["size-small","size-medium","size-large"]; sizeClass=sz[idx%sz.length]; colorClass="color-purple"; } if(level>=151){ const cols=["color-red","color-blue","color-green","color-yellow","color-purple"]; colorClass=cols[idx%cols.length]; const sz=["size-small","size-medium","size-large"]; sizeClass=sz[idx%sz.length]; } return {colorClass,sizeClass}; }
+  function getShowTimeSec(level){ return (level>=101)?2:3; }
+  function getSequenceLength(level){ if(level>=701) return 6; if(level>=501) return 5; if(level>=201) return 4+Math.min(3,Math.floor((level-200)/100)); return 3; }
+  function generateSequence(level, items){ let len=getSequenceLength(level), seq=[]; for(let i=0;i<len;i++){ let idx=(level*131+i*77+101)%items.length; seq.push({itemId:items[idx].id, emoji:items[idx].emoji, name:items[idx].name}); } return seq; }
+  
+  // Pi-based save/load
+  function saveProgressPi() { if(!piUser) return; let saves=JSON.parse(localStorage.getItem("memMasterSavesPi")||"{}"); saves[piUser.uid] = { username: piUser.username, level: currentLevel, ts: Date.now() }; localStorage.setItem("memMasterSavesPi",JSON.stringify(saves)); updateHomeHighscorePi(); }
+  function loadSavedLevelPi(uid){ let saves=JSON.parse(localStorage.getItem("memMasterSavesPi")||"{}"); return saves[uid] ? saves[uid].level : 1; }
+  function updateHomeHighscorePi() { let saves=JSON.parse(localStorage.getItem("memMasterSavesPi")||"{}"); let bestLevel=0, bestName=""; for(let [uid,data] of Object.entries(saves)){ if(data.level > bestLevel){ bestLevel=data.level; bestName=data.username; } } if(bestLevel>0){ document.getElementById("highScoreValue").innerText=bestLevel; document.getElementById("highScorePlayerName").innerHTML=`👑 ${bestName} 👑`; } else { document.getElementById("highScoreValue").innerText="0"; document.getElementById("highScorePlayerName").innerHTML="— No records yet —"; } }
+  
+  // Game flow adapted
+  function loadLevel(lvl){ currentLevel=Math.min(1000,Math.max(1,lvl)); currentItems=getItemSet(currentLevel); currentStyles=currentItems.map((_,idx)=>getStyleModifiers(currentLevel,idx)); secretSeq=generateSequence(currentLevel,currentItems); playerSeq=[]; if(timerInterval) clearInterval(timerInterval); gameActive=false; levelCompleted=false; document.getElementById("levelNum").innerText=currentLevel; let diffText="🐾"; document.getElementById("difficultyTag").innerHTML=diffText; updateUISequence(false); createButtons(); updateProgressUI(); document.getElementById("statusMsg").innerHTML=`🎬 LEVEL ${currentLevel}`; setTimeout(()=>{ if(!levelCompleted) startShowSequence(); },400); }
+  function startShowSequence(){ let duration=getShowTimeSec(currentLevel); document.getElementById("autoTimer").innerHTML=`⏳ ${duration} SECONDS`; gameActive=false; updateUISequence(true); let fill=document.getElementById("timerFill"); fill.style.width="100%"; let startTime=Date.now(); if(timerInterval) clearInterval(timerInterval); timerInterval=setInterval(()=>{ let elapsed=(Date.now()-startTime)/1000; let percent=Math.max(0,((duration-elapsed)/duration)*100); fill.style.width=percent+"%"; if(elapsed>=duration){ clearInterval(timerInterval); timerInterval=null; updateUISequence(false); gameActive=true; document.getElementById("autoTimer").innerHTML="🔁 YOUR TURN"; document.getElementById("statusMsg").innerHTML="👆 TAP IN ORDER!"; } },40); }
+  function updateUISequence(showReal){ let container=document.getElementById("sequenceDisplay"); container.innerHTML=""; if(!showReal){ for(let i=0;i<secretSeq.length;i++){ let s=document.createElement("span"); s.innerText="❓"; container.appendChild(s); } } else { for(let i=0;i<secretSeq.length;i++){ let s=document.createElement("span"); let displayText=(currentLevel>=51 && currentLevel<=100)?secretSeq[i].name:secretSeq[i].emoji; if(currentLevel>=151 && currentLevel<=200) displayText=secretSeq[i].name; s.innerText=displayText; container.appendChild(s); } } }
+  function createButtons(){ let grid=document.getElementById("animalsContainer"); grid.innerHTML=""; currentItems.forEach((item,idx)=>{ let btn=document.createElement("div"); btn.className=`animal-btn ${currentStyles[idx].colorClass} ${currentStyles[idx].sizeClass}`; let displayLabel=(currentLevel>=51 && currentLevel<=100)?`${item.emoji} ${item.name}`:(currentLevel>=151?`${item.name}`:item.emoji); btn.innerHTML=displayLabel; btn.onclick=()=>handleTap(idx); grid.appendChild(btn); }); }
+  function handleTap(idx){ if(!gameActive || levelCompleted) return; let selectedId=currentItems[idx].id; playerSeq.push(selectedId); let expected=secretSeq[playerSeq.length-1].itemId; updateProgressUI(); if(selectedId!==expected){ showFeedback("wrong"); gameActive=false; if(timerInterval) clearInterval(timerInterval); document.getElementById("statusMsg").innerHTML="❌ WRONG! -2 LEVELS"; setTimeout(()=>{ let newLvl=Math.max(1,currentLevel-2); currentLevel=newLvl; saveProgressPi(); loadLevel(currentLevel); },1300); return; } if(playerSeq.length===secretSeq.length){ showFeedback("correct"); levelCompleted=true; gameActive=false; if(timerInterval) clearInterval(timerInterval); playSound("levelup"); regularCelebration(); document.getElementById("statusMsg").innerHTML="🎉 PERFECT! +1 LEVEL 🎉"; saveProgressPi(); let completedLevel = currentLevel; setTimeout(async ()=>{ let nextLevel = completedLevel + 1; if(nextLevel % 10 === 0 && nextLevel <= 1000) { if(!navigator.onLine){ document.getElementById("statusMsg").innerHTML="🌐 INTERNET NEEDED TO PROGRESS!"; showInternetModal(); return; } else { intenseCelebration(nextLevel); } } if(completedLevel < 1000){ currentLevel = nextLevel; loadLevel(currentLevel); } else { document.getElementById("statusMsg").innerHTML="🏆 LEGEND! 1000/1000 COMPLETED 🏆"; intenseCelebration(1000); } },1500); } else { document.getElementById("statusMsg").innerHTML=`✅ ${playerSeq.length}/${secretSeq.length}`; } }
+  function updateProgressUI(){ document.getElementById("inputCounter").innerHTML=`${playerSeq.length}/${secretSeq.length}`; document.getElementById("progressFill").style.width=(playerSeq.length/secretSeq.length)*100+"%"; }
+  function toggleSoundUI(){ soundOn=!soundOn; document.getElementById("soundToggle").innerHTML=soundOn?"🔊":"🔇"; }
+  
+  function showInternetModal(){ document.getElementById("internetModal").style.display="flex"; }
+  function hideInternetModal(){ document.getElementById("internetModal").style.display="none"; }
+  function updateHomeInternet(){ isOnline=navigator.onLine; let el=document.getElementById("homeInternetStatus"), txt=document.getElementById("homeInternetText"); if(isOnline){ el.classList.add("online"); el.classList.remove("offline"); txt.innerHTML="✅ ONLINE - READY"; } else { el.classList.add("offline"); el.classList.remove("online"); txt.innerHTML="❌ OFFLINE - NEED INTERNET"; } }
+  
+  function startGameWithPi(){ if(!piUser){ document.getElementById("piErrorMsg").style.display="block"; return; } if(!navigator.onLine){ showInternetModal(); return; } document.getElementById("piErrorMsg").style.display="none"; document.getElementById("playerNameDisplay").innerText = piUser.username; currentLevel = loadSavedLevelPi(piUser.uid); document.getElementById("homeScreen").style.display="none"; document.getElementById("gameContainer").style.display="flex"; loadLevel(currentLevel); document.getElementById("rulesPopup").style.display="none"; }
+  function showRulesModal(){ if(!piUser){ document.getElementById("piErrorMsg").style.display="block"; return; } if(!navigator.onLine){ showInternetModal(); return; } document.getElementById("rulesPopup").style.display="flex"; showTopLeaderboardPi(); }
+  function showTopLeaderboardPi(){ let saves=JSON.parse(localStorage.getItem("memMasterSavesPi")||"{}"); let arr=Object.entries(saves).map(([uid,d])=>({name:d.username,level:d.level})); arr.sort((a,b)=>b.level-a.level); let top=arr.slice(0,100); let html='<table class="leaderboard-table"><tr><th>#</th><th>👤 NAME</th><th>⭐ LEVEL</th></tr>'; top.forEach((p,i)=>{ html+=`<tr class="${i<3?'top-3':''}"><td>${i+1}</td><td>${p.name}</td><td>${p.level}</td></tr>`; }); html+='</table>'; document.getElementById("leaderboardList").innerHTML=html; }
+  
+  // Pi SDK initialization
+  function initPiSDK() {
+    if (window.Pi) {
+      Pi.init({ version: "2.0", sandbox: false });
+      piInitialized = true;
+    } else {
+      setTimeout(initPiSDK, 500);
     }
-    function getStyleModifiers(level, idx) { let colorClass="", sizeClass="size-medium"; if(level>=21 && level<=30){ const cols=["color-red","color-blue","color-green","color-yellow"]; colorClass=cols[idx%cols.length]; } if(level>=31 && level<=50){ colorClass="color-blue"; const sz=["size-small","size-medium","size-large","size-small"]; sizeClass=sz[idx%sz.length]; } if(level>=101 && level<=150){ const sz=["size-small","size-medium","size-large"]; sizeClass=sz[idx%sz.length]; colorClass="color-purple"; } if(level>=151){ const cols=["color-red","color-blue","color-green","color-yellow","color-purple"]; colorClass=cols[idx%cols.length]; const sz=["size-small","size-medium","size-large"]; sizeClass=sz[idx%sz.length]; } return {colorClass,sizeClass}; }
-    function getShowTimeSec(level){ return (level>=101)?2:3; }
-    function getSequenceLength(level){ if(level>=701) return 6; if(level>=501) return 5; if(level>=201) return 4+Math.min(3,Math.floor((level-200)/100)); return 3; }
-    function generateSequence(level, items){ let len=getSequenceLength(level), seq=[]; for(let i=0;i<len;i++){ let idx=(level*131+i*77+101)%items.length; seq.push({itemId:items[idx].id, emoji:items[idx].emoji, name:items[idx].name}); } return seq; }
-
-    let currentLevel=1, secretSeq=[], playerSeq=[], gameActive=false, levelCompleted=false;
-    let timerInterval=null, soundOn=true, playerName="", isOnline=true;
-    let currentItems=[], currentStyles=[];
-    let canvas, ctx, particles=[], particleAnim=null;
-    
-    function initCanvas(){ canvas=document.getElementById("particleCanvas"); ctx=canvas.getContext("2d"); resize(); window.addEventListener("resize",resize); }
-    function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
-    function playSound(type){ if(!soundOn) return; let audioCtx=new (window.AudioContext||window.webkitAudioContext)(); audioCtx.resume(); let osc=audioCtx.createOscillator(), gain=audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); if(type==="correct"){ osc.frequency.value=880; gain.gain.value=0.15; osc.type="sine"; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.3); osc.stop(audioCtx.currentTime+0.3); } else if(type==="wrong"){ osc.frequency.value=440; osc.type="sawtooth"; gain.gain.value=0.15; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.4); osc.stop(audioCtx.currentTime+0.4); } else if(type==="levelup"){ let notes=[523,659,784]; notes.forEach((f,i)=>{ let o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.frequency.value=f; g.gain.value=0.12; o.type="triangle"; o.start(audioCtx.currentTime+i*0.12); g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+i*0.12+0.35); o.stop(audioCtx.currentTime+i*0.12+0.35); }); } }
-    function showFeedback(type){ let div=document.createElement("div"); div.className=type==="wrong"?"wrong-cross":"correct-check"; div.innerText=type==="wrong"?"❌":"✅"; document.body.appendChild(div); setTimeout(()=>div.remove(),500); if(type==="wrong") playSound("wrong"); else playSound("correct"); }
-    function updateHomeInternet(){ isOnline=navigator.onLine; let el=document.getElementById("homeInternetStatus"), txt=document.getElementById("homeInternetText"), btn=document.getElementById("startGameBtn"); if(isOnline){ el.classList.add("online"); el.classList.remove("offline"); txt.innerHTML="✅ ONLINE - READY"; btn.disabled=false; btn.classList.remove("disabled"); } else { el.classList.add("offline"); el.classList.remove("online"); txt.innerHTML="❌ OFFLINE - NEED INTERNET"; btn.disabled=true; btn.classList.add("disabled"); } }
-    function showInternetModal(){ document.getElementById("internetModal").style.display="flex"; }
-    function hideInternetModal(){ document.getElementById("internetModal").style.display="none"; }
-    
-    function updateHomeHighscore() {
-        let saves = JSON.parse(localStorage.getItem("memMasterSaves") || "{}");
-        let bestPlayer = null; let bestLevel = 0;
-        for (let [name, data] of Object.entries(saves)) { if (data.level > bestLevel) { bestLevel = data.level; bestPlayer = name; } }
-        if (bestPlayer && bestLevel > 0) { document.getElementById("highScoreValue").innerText = bestLevel; document.getElementById("highScorePlayerName").innerHTML = `👑 ${bestPlayer} 👑`; } 
-        else { document.getElementById("highScoreValue").innerText = "0"; document.getElementById("highScorePlayerName").innerHTML = "— No records yet —"; }
-    }
-    
-    function saveProgress(){ if(!playerName) return; let saves=JSON.parse(localStorage.getItem("memMasterSaves")||"{}"); saves[playerName]={level:currentLevel,ts:Date.now()}; localStorage.setItem("memMasterSaves",JSON.stringify(saves)); updateHomeHighscore(); }
-    function loadSavedLevel(name){ let saves=JSON.parse(localStorage.getItem("memMasterSaves")||"{}"); return saves[name]?saves[name].level:1; }
-    function showTopLeaderboard(){ let saves=JSON.parse(localStorage.getItem("memMasterSaves")||"{}"); let arr=Object.entries(saves).map(([n,d])=>({name:n,level:d.level})); arr.sort((a,b)=>b.level-a.level); let top=arr.slice(0,100); let html='<table class="leaderboard-table"><tr><th>#</th><th>👤 NAME</th><th>⭐ LEVEL</th></tr>'; top.forEach((p,i)=>{ html+=`<tr class="${i<3?'top-3':''}"><td>${i+1}</td><td>${p.name}</td><td>${p.level}</td></tr>`; }); html+='</table>'; document.getElementById("leaderboardList").innerHTML=html; }
-    
-    function loadLevel(lvl){ currentLevel=Math.min(1000,Math.max(1,lvl)); currentItems=getItemSet(currentLevel); currentStyles=currentItems.map((_,idx)=>getStyleModifiers(currentLevel,idx)); secretSeq=generateSequence(currentLevel,currentItems); playerSeq=[]; if(timerInterval) clearInterval(timerInterval); gameActive=false; levelCompleted=false; document.getElementById("levelNum").innerText=currentLevel; let diffText=currentLevel<=5?"🐾 ANIMALS":(currentLevel<=10?"🐘 MIX":(currentLevel<=20?"🐟 FISH":(currentLevel<=30?"🌈 COLOR":(currentLevel<=50?"⚪ SIZE":(currentLevel<=100?"📖 NAMES":(currentLevel<=150?"⚡ 2SEC":(currentLevel<=200?"✍️ SPELLING":(currentLevel<=500?"🔥 LEGEND+":"💀 EXTREME")))))))); document.getElementById("difficultyTag").innerHTML=diffText; updateUISequence(false); createButtons(); updateProgressUI(); document.getElementById("statusMsg").innerHTML=`🎬 LEVEL ${currentLevel}`; setTimeout(()=>{ if(!levelCompleted) startShowSequence(); },400); }
-    
-    function startShowSequence(){ let duration=getShowTimeSec(currentLevel); document.getElementById("autoTimer").innerHTML=`⏳ ${duration} SECONDS`; gameActive=false; updateUISequence(true); let fill=document.getElementById("timerFill"); fill.style.width="100%"; let startTime=Date.now(); if(timerInterval) clearInterval(timerInterval); timerInterval=setInterval(()=>{ let elapsed=(Date.now()-startTime)/1000; let percent=Math.max(0,((duration-elapsed)/duration)*100); fill.style.width=percent+"%"; if(elapsed>=duration){ clearInterval(timerInterval); timerInterval=null; updateUISequence(false); gameActive=true; document.getElementById("autoTimer").innerHTML="🔁 YOUR TURN"; document.getElementById("statusMsg").innerHTML="👆 TAP IN ORDER!"; } },40); }
-    function updateUISequence(showReal){ let container=document.getElementById("sequenceDisplay"); container.innerHTML=""; if(!showReal){ for(let i=0;i<secretSeq.length;i++){ let s=document.createElement("span"); s.innerText="❓"; container.appendChild(s); } } else { for(let i=0;i<secretSeq.length;i++){ let s=document.createElement("span"); let displayText=(currentLevel>=51 && currentLevel<=100)?secretSeq[i].name:secretSeq[i].emoji; if(currentLevel>=151 && currentLevel<=200) displayText=secretSeq[i].name; s.innerText=displayText; container.appendChild(s); } } }
-    function createButtons(){ let grid=document.getElementById("animalsContainer"); grid.innerHTML=""; currentItems.forEach((item,idx)=>{ let btn=document.createElement("div"); btn.className=`animal-btn ${currentStyles[idx].colorClass} ${currentStyles[idx].sizeClass}`; let displayLabel=(currentLevel>=51 && currentLevel<=100)?`${item.emoji} ${item.name}`:(currentLevel>=151?`${item.name}`:item.emoji); btn.innerHTML=displayLabel; btn.onclick=()=>handleTap(idx); grid.appendChild(btn); }); }
-    
-    function handleTap(idx){
-        if(!gameActive || levelCompleted) return;
-        let selectedId=currentItems[idx].id;
-        playerSeq.push(selectedId);
-        let expected=secretSeq[playerSeq.length-1].itemId;
-        updateProgressUI();
-        if(selectedId!==expected){
-            showFeedback("wrong"); gameActive=false;
-            if(timerInterval) clearInterval(timerInterval);
-            document.getElementById("statusMsg").innerHTML="❌ WRONG! -2 LEVELS";
-            setTimeout(()=>{ let newLvl=Math.max(1,currentLevel-2); currentLevel=newLvl; saveProgress(); loadLevel(currentLevel); },1300);
-            return;
-        }
-        if(playerSeq.length===secretSeq.length){
-            showFeedback("correct"); levelCompleted=true; gameActive=false;
-            if(timerInterval) clearInterval(timerInterval);
-            playSound("levelup"); regularCelebration();
-            document.getElementById("statusMsg").innerHTML="🎉 PERFECT! +1 LEVEL 🎉";
-            saveProgress();
-            let completedLevel = currentLevel;
-            setTimeout(async ()=>{
-                let nextLevel = completedLevel + 1;
-                if(nextLevel % 10 === 0 && nextLevel <= 1000) {
-                    if(!navigator.onLine){ document.getElementById("statusMsg").innerHTML="🌐 INTERNET NEEDED TO PROGRESS!"; showInternetModal(); return; }
-                    else { intenseCelebration(nextLevel); }
-                }
-                if(completedLevel < 1000){ currentLevel = nextLevel; loadLevel(currentLevel); } 
-                else { document.getElementById("statusMsg").innerHTML="🏆 LEGEND! 1000/1000 COMPLETED 🏆"; intenseCelebration(1000); }
-            },1500);
-        } else { document.getElementById("statusMsg").innerHTML=`✅ ${playerSeq.length}/${secretSeq.length}`; }
-    }
-    
-    function updateProgressUI(){ document.getElementById("inputCounter").innerHTML=`${playerSeq.length}/${secretSeq.length}`; document.getElementById("progressFill").style.width=(playerSeq.length/secretSeq.length)*100+"%"; }
-    function toggleSoundUI(){ soundOn=!soundOn; document.getElementById("soundToggle").innerHTML=soundOn?"🔊":"🔇"; }
-    function startGameFlow(){ let nameInput=document.getElementById("playerNameInput").value.trim(); if(!nameInput){ document.getElementById("nameErrorMsg").style.display="block"; playSound("wrong"); return; } document.getElementById("nameErrorMsg").style.display="none"; playerName=nameInput; document.getElementById("playerNameDisplay").innerText=playerName; if(!navigator.onLine){ showInternetModal(); return; } currentLevel=loadSavedLevel(playerName); document.getElementById("homeScreen").style.display="none"; document.getElementById("gameContainer").style.display="flex"; loadLevel(currentLevel); document.getElementById("rulesPopup").style.display="none"; }
-    function showRulesModal(){ if(!navigator.onLine){ showInternetModal(); return; } document.getElementById("rulesPopup").style.display="flex"; showTopLeaderboard(); }
-    
-    window.addEventListener("load",()=>{ initCanvas(); initMilestoneCanvas(); updateHomeInternet(); updateHomeHighscore(); window.addEventListener("online",()=>{ updateHomeInternet(); hideInternetModal(); if(document.getElementById("gameContainer").style.display==="flex") document.getElementById("statusMsg").innerHTML="🌐 INTERNET RESTORED! CONTINUE."; }); window.addEventListener("offline",()=>{ updateHomeInternet(); if(document.getElementById("gameContainer").style.display==="flex") document.getElementById("statusMsg").innerHTML="⚠️ INTERNET LOST! LEVEL 10/20/30 MAY BE BLOCKED."; }); document.getElementById("startGameBtn").onclick=showRulesModal; document.getElementById("playBtn").onclick=startGameFlow; document.getElementById("skipBtn").onclick=startGameFlow; document.getElementById("soundToggle").onclick=toggleSoundUI; document.getElementById("showLeaderBtn").onclick=showTopLeaderboard; document.getElementById("retryInternetBtn").onclick=()=>{ if(navigator.onLine){ hideInternetModal(); if(document.getElementById("gameContainer").style.display==="flex") loadLevel(currentLevel); else showRulesModal(); } else alert("Still offline. Please connect to internet."); }; });
+  }
+  document.getElementById("piLoginBtn").onclick = async () => {
+    if(!window.Pi) { alert("Pi SDK loading..."); return; }
+    try {
+      const scopes = ['username'];
+      const auth = await Pi.authenticate(scopes, () => {});
+      if(auth && auth.user && auth.user.uid) {
+        piUser = { uid: auth.user.uid, username: auth.user.username || `PiUser_${auth.user.uid.slice(0,6)}` };
+        document.getElementById("piUserDisplay").style.display = "flex";
+        document.getElementById("piUsernameSpan").innerText = piUser.username;
+        document.getElementById("piLoginBtn").style.display = "none";
+        document.getElementById("startGameBtn").disabled = false;
+        document.getElementById("piErrorMsg").style.display = "none";
+        updateHomeHighscorePi();
+      } else throw new Error("No user data");
+    } catch(e) { alert("Pi login failed: " + e.message); }
+  };
+  window.addEventListener("load",()=>{ initCanvas(); initMilestoneCanvas(); initPiSDK(); updateHomeInternet(); updateHomeHighscorePi(); window.addEventListener("online",()=>{ updateHomeInternet(); hideInternetModal(); if(document.getElementById("gameContainer").style.display==="flex") document.getElementById("statusMsg").innerHTML="🌐 INTERNET RESTORED!"; }); window.addEventListener("offline",updateHomeInternet); document.getElementById("startGameBtn").onclick=showRulesModal; document.getElementById("playBtn").onclick=startGameWithPi; document.getElementById("skipBtn").onclick=startGameWithPi; document.getElementById("soundToggle").onclick=toggleSoundUI; document.getElementById("showLeaderBtn").onclick=showTopLeaderboardPi; document.getElementById("retryInternetBtn").onclick=()=>{ if(navigator.onLine){ hideInternetModal(); if(piUser && document.getElementById("gameContainer").style.display==="flex") loadLevel(currentLevel); else if(piUser) showRulesModal(); } else alert("Still offline."); }; });
 </script>
-
-
-
-
-
-    
 </body>
-
-   
 </html>
