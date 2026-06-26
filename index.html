@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Animal Odyssey | Pi Memory Master</title>
   <style>
+    /* ... (all styles remain the same) ... */
     * {
       box-sizing: border-box;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* light off-white background with subtle texture */
     body {
       background: linear-gradient(135deg, #f5f0e8 0%, #ede6db 100%);
       min-height: 100vh;
@@ -113,7 +113,6 @@
       100% { top: 10%; opacity: 0; visibility: hidden; }
     }
 
-    /* Internet Required Modal */
     .internet-required-modal {
       position: fixed;
       top: 0;
@@ -183,7 +182,6 @@
     .highscore-player { font-size: 0.85rem; color: #6a4a2a; margin-top: 5px; font-weight: bold; word-break: break-word; }
     .difficulty-badge { background: #e8dcc8; border-radius: 50px; padding: 6px 14px; display: inline-block; margin: 10px 0; font-weight: bold; color: #5a3a1a; border: 1px solid #c9aa7a; font-size: 0.8rem; }
     
-    /* Pi Button Style */
     .pi-login-area {
       margin: 15px 0;
     }
@@ -410,32 +408,116 @@
   function showRulesModal(){ if(!piUser){ document.getElementById("piErrorMsg").style.display="block"; return; } if(!navigator.onLine){ showInternetModal(); return; } document.getElementById("rulesPopup").style.display="flex"; showTopLeaderboardPi(); }
   function showTopLeaderboardPi(){ let saves=JSON.parse(localStorage.getItem("memMasterSavesPi")||"{}"); let arr=Object.entries(saves).map(([uid,d])=>({name:d.username,level:d.level})); arr.sort((a,b)=>b.level-a.level); let top=arr.slice(0,100); let html='<table class="leaderboard-table"><tr><th>#</th><th>👤 NAME</th><th>⭐ LEVEL</th></tr>'; top.forEach((p,i)=>{ html+=`<tr class="${i<3?'top-3':''}"><td>${i+1}</td><td>${p.name}</td><td>${p.level}</td></tr>`; }); html+='</table>'; document.getElementById("leaderboardList").innerHTML=html; }
   
-  // Pi SDK initialization
+  // Fixed Pi SDK initialization
   function initPiSDK() {
-    if (window.Pi) {
-      Pi.init({ version: "2.0", sandbox: false });
-      piInitialized = true;
+    // Check if Pi SDK is already loaded
+    if (typeof Pi !== 'undefined' && Pi.init) {
+      try {
+        Pi.init({ version: "2.0", sandbox: false });
+        piInitialized = true;
+        console.log("Pi SDK initialized successfully");
+        // Enable login button
+        document.getElementById("piLoginBtn").disabled = false;
+      } catch(e) {
+        console.error("Pi init error:", e);
+        setTimeout(initPiSDK, 1000);
+      }
     } else {
+      // Wait for SDK to load
+      console.log("Waiting for Pi SDK...");
       setTimeout(initPiSDK, 500);
     }
   }
-  document.getElementById("piLoginBtn").onclick = async () => {
-    if(!window.Pi) { alert("Pi SDK loading..."); return; }
+
+  // Pi Login handler with proper error handling
+  document.getElementById("piLoginBtn").onclick = async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = "⏳ Connecting...";
+
     try {
+      // Make sure Pi is initialized
+      if (!piInitialized) {
+        await new Promise((resolve) => {
+          const checkInit = () => {
+            if (piInitialized) {
+              resolve();
+            } else {
+              setTimeout(checkInit, 200);
+            }
+          };
+          checkInit();
+        });
+      }
+
       const scopes = ['username'];
-      const auth = await Pi.authenticate(scopes, () => {});
-      if(auth && auth.user && auth.user.uid) {
-        piUser = { uid: auth.user.uid, username: auth.user.username || `PiUser_${auth.user.uid.slice(0,6)}` };
+      const auth = await Pi.authenticate(scopes, function onIncompletePaymentFound(payment) {
+        // Handle incomplete payments if needed
+        console.log("Incomplete payment:", payment);
+        return;
+      });
+
+      if (auth && auth.user && auth.user.uid) {
+        piUser = { 
+          uid: auth.user.uid, 
+          username: auth.user.username || `PiUser_${auth.user.uid.slice(0,6)}` 
+        };
         document.getElementById("piUserDisplay").style.display = "flex";
         document.getElementById("piUsernameSpan").innerText = piUser.username;
         document.getElementById("piLoginBtn").style.display = "none";
         document.getElementById("startGameBtn").disabled = false;
         document.getElementById("piErrorMsg").style.display = "none";
         updateHomeHighscorePi();
-      } else throw new Error("No user data");
-    } catch(e) { alert("Pi login failed: " + e.message); }
+        console.log("Pi login successful:", piUser);
+      } else {
+        throw new Error("No user data received from Pi");
+      }
+    } catch(e) {
+      console.error("Pi login error:", e);
+      document.getElementById("piErrorMsg").style.display = "block";
+      document.getElementById("piErrorMsg").innerHTML = `⚠️ Login failed: ${e.message || "Unknown error"}`;
+      btn.disabled = false;
+      btn.innerHTML = "🔐 Sign in with Pi Network";
+    }
   };
-  window.addEventListener("load",()=>{ initCanvas(); initMilestoneCanvas(); initPiSDK(); updateHomeInternet(); updateHomeHighscorePi(); window.addEventListener("online",()=>{ updateHomeInternet(); hideInternetModal(); if(document.getElementById("gameContainer").style.display==="flex") document.getElementById("statusMsg").innerHTML="🌐 INTERNET RESTORED!"; }); window.addEventListener("offline",updateHomeInternet); document.getElementById("startGameBtn").onclick=showRulesModal; document.getElementById("playBtn").onclick=startGameWithPi; document.getElementById("skipBtn").onclick=startGameWithPi; document.getElementById("soundToggle").onclick=toggleSoundUI; document.getElementById("showLeaderBtn").onclick=showTopLeaderboardPi; document.getElementById("retryInternetBtn").onclick=()=>{ if(navigator.onLine){ hideInternetModal(); if(piUser && document.getElementById("gameContainer").style.display==="flex") loadLevel(currentLevel); else if(piUser) showRulesModal(); } else alert("Still offline."); }; });
+
+  // Initialize everything when page loads
+  window.addEventListener("load", () => {
+    initCanvas(); 
+    initMilestoneCanvas(); 
+    initPiSDK(); // Start Pi SDK initialization
+    updateHomeInternet(); 
+    updateHomeHighscorePi();
+    
+    // Online/Offline event listeners
+    window.addEventListener("online", () => {
+      updateHomeInternet(); 
+      hideInternetModal(); 
+      if(document.getElementById("gameContainer").style.display === "flex") {
+        document.getElementById("statusMsg").innerHTML = "🌐 INTERNET RESTORED!";
+      }
+    });
+    window.addEventListener("offline", updateHomeInternet);
+    
+    // Button event listeners
+    document.getElementById("startGameBtn").onclick = showRulesModal;
+    document.getElementById("playBtn").onclick = startGameWithPi;
+    document.getElementById("skipBtn").onclick = startGameWithPi;
+    document.getElementById("soundToggle").onclick = toggleSoundUI;
+    document.getElementById("showLeaderBtn").onclick = showTopLeaderboardPi;
+    document.getElementById("retryInternetBtn").onclick = () => {
+      if(navigator.onLine) { 
+        hideInternetModal(); 
+        if(piUser && document.getElementById("gameContainer").style.display === "flex") {
+          loadLevel(currentLevel);
+        } else if(piUser) {
+          showRulesModal();
+        }
+      } else {
+        alert("Still offline. Please connect to the internet and try again.");
+      }
+    };
+  });
 </script>
 </body>
 </html>
