@@ -409,6 +409,103 @@
   function startGameWithPi(){ if(!piUser){ document.getElementById("piErrorMsg").style.display="block"; return; } if(!navigator.onLine){ showInternetModal(); return; } document.getElementById("piErrorMsg").style.display="none"; document.getElementById("playerNameDisplay").innerText = piUser.username; currentLevel = loadSavedLevelPi(piUser.uid); document.getElementById("homeScreen").style.display="none"; document.getElementById("gameContainer").style.display="flex"; loadLevel(currentLevel); document.getElementById("rulesPopup").style.display="none"; }
   function showRulesModal(){ if(!piUser){ document.getElementById("piErrorMsg").style.display="block"; return; } if(!navigator.onLine){ showInternetModal(); return; } document.getElementById("rulesPopup").style.display="flex"; showTopLeaderboardPi(); }
   function showTopLeaderboardPi(){ let saves=JSON.parse(localStorage.getItem("memMasterSavesPi")||"{}"); let arr=Object.entries(saves).map(([uid,d])=>({name:d.username,level:d.level})); arr.sort((a,b)=>b.level-a.level); let top=arr.slice(0,100); let html='<table class="leaderboard-table"><tr><th>#</th><th>👤 NAME</th><th>⭐ LEVEL</th></tr>'; top.forEach((p,i)=>{ html+=`<tr class="${i<3?'top-3':''}"><td>${i+1}</td><td>${p.name}</td><td>${p.level}</td></tr>`; }); html+='</table>'; document.getElementById("leaderboardList").innerHTML=html; }
+
+
+
+document.getElementById("piLoginBtn").onclick = async function () {
+
+    const btn = this;
+
+    if (!navigator.onLine) {
+        alert("Please connect to the internet.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = "⏳ Connecting to Pi...";
+
+    try {
+
+        // Initialize SDK if required
+        if (!piInitialized) {
+            await initPiSDK();
+        }
+
+        if (!window.Pi || !piInitialized) {
+            throw new Error(
+                "Pi SDK is not ready. Please retry in Pi Browser."
+            );
+        }
+
+        btn.innerHTML = "🔐 Waiting for Pi Authentication...";
+
+        const auth = await Promise.race([
+            window.Pi.authenticate(
+                ["username"],
+                function (payment) {
+                    console.log(
+                        "Incomplete payment:",
+                        payment
+                    );
+                }
+            ),
+
+            new Promise((_, reject) =>
+                setTimeout(
+                    () => reject(
+                        new Error("Login timed out. Please try again.")
+                    ),
+                    60000
+                )
+            )
+        ]);
+
+        if (!auth || !auth.user || !auth.user.uid) {
+            throw new Error("Pi user information not received.");
+        }
+
+        piUser = {
+            uid: auth.user.uid,
+            username: auth.user.username ||
+                "PiUser_" + auth.user.uid.slice(0, 6)
+        };
+
+        document.getElementById("piUserDisplay").style.display = "flex";
+
+        document.getElementById("piUsernameSpan").innerText =
+            piUser.username;
+
+        document.getElementById("piLoginBtn").style.display = "none";
+
+        document.getElementById("startGameBtn").disabled = false;
+
+        document.getElementById("piErrorMsg").style.display = "none";
+
+        updateHomeHighscorePi();
+
+        console.log("Pi Login Successful:", piUser);
+
+    } catch (error) {
+
+        console.error("Pi Authentication Error:", error);
+
+        document.getElementById("piErrorMsg").style.display = "block";
+
+        document.getElementById("piErrorMsg").innerText =
+            "⚠️ " + (error.message || "Pi Login Failed");
+
+        btn.disabled = false;
+        btn.innerHTML = "🔐 Retry Pi Login";
+    }
+};
+
+
+
+
+  
+
+  
+
   
   // Fixed Pi SDK initialization
   function initPiSDK() {
